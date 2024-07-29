@@ -12,7 +12,7 @@ source $HOME/scripts/load-intel.sh
 
 mpiexec -n 192 julia --project=$PBS_O_WORKDIR -e'
   using PoissonIntegrator;
-  main_tsw_entropy(;nprocs=(16,12),testcase=merging,ps=[1],ns=[192],CFLs=[0.4],tF=[250.0],
+  main_tsw_entropy(;nprocs=(16,12),testcase=merging,ps=[1],ns=[192],CFLs=[0.4],tF=[10.0],
                     const_jac=true,
                     out_loc="tsw_entropy_merging_btilde_n192",out_freq=20,
                     options=options_cg_gmres,

@@ -10,7 +10,7 @@
 source $HOME/scripts/load-configs-zg98.sh
 source $HOME/scripts/load-intel.sh
 
-mpiexec -n 36 julia --project=$PBS_O_WORKDIR -J$PBS_O_WORKDIR/PoissonIntegrator.so -e'
+mpiexec -n 36 julia --project=$PBS_O_WORKDIR -e'
   using PoissonIntegrator;
   main_tsw_entropy(;nprocs=(6,6),testcase=convergence,ps=[1],ns=[16],CFLs=[0.2],tF=[26.56],
                     const_jac=true,

@@ -17,5 +17,5 @@ mpiexec -n 144 julia --project=$PBS_O_WORKDIR -e'
                     out_loc="tsw_entropy_instability_n192",out_freq=20,
                     options=options_cg_gmres,
                     upwinding=nothing,
-                    nls_tols = (;atol=1e-13,rtol=1e-11,maxiter=10))
+                    nls_tols = (;atol=1e-13,rtol=1e-11,maxiter=200))
 '

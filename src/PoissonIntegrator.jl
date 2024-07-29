@@ -81,8 +81,8 @@ include("save_load.jl")
 include("mytypes.jl")
 
 
-export merging, instability, restarted
-export Merging, Instability, Restarted
+export merging, instability, restarted, convergence
+export Merging, Instability, Restarted, Convergence
 export convergencerestarted, ConvergenceRestarted
 
 

@@ -1,5 +1,5 @@
 
-function run_tsw_entropy(case::Dict,ranks,nprocs,options,out_dir,testcase::tswconvergence,upwinding)
+function run_tsw_entropy(case::Dict,ranks,nprocs,options,out_dir,testcase::tswconvergence,upwinding,conserving)
 
   @unpack n, p, tF, CFL, out_loc, out_freq, const_jac, nls_tols = case
 
@@ -27,7 +27,7 @@ function run_tsw_entropy(case::Dict,ranks,nprocs,options,out_dir,testcase::tswco
 
 end
 
-function run_tsw_entropy(case::Dict,ranks,nprocs,options,out_dir,testcase::tswconvergencerestarted,upwinding)
+function run_tsw_entropy(case::Dict,ranks,nprocs,options,out_dir,testcase::tswconvergencerestarted,upwinding,conserving)
 
   @unpack n, p, tF, CFL, out_loc, out_freq, const_jac, nls_tols = case
 

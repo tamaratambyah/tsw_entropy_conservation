@@ -1,0 +1,10 @@
+.pvd
+*.ogv
+*.e*
+*.o*
+*.jld
+*.pvtu
+*.bbl
+*.blg
+*.jld2
+data/
