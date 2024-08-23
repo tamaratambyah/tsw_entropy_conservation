@@ -1,12 +1,12 @@
-module PoissonIntegrator
+module PoissonIntegrator2
 
 using DrWatson
-using Gridap, GridapDistributed, GridapPETSc, GridapGmsh, GridapP4est
+using Gridap, GridapDistributed, GridapPETSc#, GridapGmsh, GridapP4est
 using PartitionedArrays
 using LinearAlgebra, NLsolve
 using Gridap.Visualization
 using VTKBase
-using GridapSolvers
+# using GridapSolvers
 using JLD2
 
 import Gridap.Visualization: Grid
@@ -76,7 +76,7 @@ include("petsc.jl")
 
 export petsc_gmres_setup, petsc_newton_setup
 
-include("vtk_fix.jl")
+# include("vtk_fix.jl")
 include("save_load.jl")
 include("mytypes.jl")
 
@@ -86,13 +86,13 @@ export Merging, Instability, Restarted, Convergence
 export convergencerestarted, ConvergenceRestarted
 
 
-include("Drivers/tsw_entropy.jl")
-include("Drivers/upwinding.jl")
-include("Drivers/initial_conditions.jl")
-include("Drivers/convergence_test.jl")
-include("Drivers/nonconserving.jl")
+# include("Drivers/tsw_entropy.jl")
+# include("Drivers/upwinding.jl")
+# include("Drivers/initial_conditions.jl")
+# include("Drivers/convergence_test.jl")
+# include("Drivers/nonconserving.jl")
 
-export main_tsw_entropy
+# export main_tsw_entropy
 
 
 const options_cg_gmres = """
