@@ -25,6 +25,7 @@ function main_tsw_entropy(;nprocs,testcase=instability,ps=[1],ns=[16],CFLs=[0.2]
 
   GridapPETSc.Init(args=split(options))
 
+  (i_am_main(ranks) && !isdir("data"))  && mkdir("data")
   main_tsw_entropy(dicts,ranks,nprocs,options,out_loc,testcase,upwinding_parms)
 
   GridapPETSc.Finalize()
