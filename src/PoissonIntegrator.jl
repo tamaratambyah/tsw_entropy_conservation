@@ -1,11 +1,10 @@
 module PoissonIntegrator
 
 using DrWatson
-using Gridap, GridapDistributed, GridapPETSc, GridapGmsh, GridapP4est
+using Gridap, GridapDistributed, GridapPETSc
 using PartitionedArrays
 using LinearAlgebra, NLsolve
 using Gridap.Visualization
-using VTKBase
 using GridapSolvers
 using JLD2
 
@@ -63,35 +62,32 @@ include("TSW/TSWODEOpsFromTFEOps.jl")
 
 include("TSW/TSWTransientFESolutions.jl")
 include("TSW/TSWODESolutions.jl")
-
 export solve
 
 
 include("helpers.jl")
 export gradPerp
 export vecPerp
-export my_sign
+export my_sign, upwinding_sign
 
-include("petsc.jl")
+include("solvers.jl")
+export get_solvers
 
-export petsc_gmres_setup, petsc_newton_setup
-
-include("vtk_fix.jl")
-include("save_load.jl")
 include("mytypes.jl")
+export instability, convergence, vortex
+export Instability, Convergence, Vortex
 
+include("tsw_funcs.jl")
+export get_FEspaces, compute_casimirs
+export res_diagw, jac_diagw
+export Tfunc, bbarfunc
 
-export merging, instability, restarted, convergence
-export Merging, Instability, Restarted, Convergence
-export convergencerestarted, ConvergenceRestarted
+include("initial_conditions.jl")
+export get_testcase
 
 
 include("Drivers/tsw_entropy.jl")
-include("Drivers/upwinding.jl")
-include("Drivers/initial_conditions.jl")
 include("Drivers/convergence_test.jl")
-include("Drivers/nonconserving.jl")
-
 export main_tsw_entropy
 
 

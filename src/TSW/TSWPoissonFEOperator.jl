@@ -96,7 +96,7 @@ end
 
 
 function Gridap.FESpaces.get_trial(top::TransientTSWOperator)
-  println("this func")
+  # println("this func")
   progop = get_progop(top.op)
   get_trial(progop)
 end
@@ -104,7 +104,7 @@ end
 
 
 function get_diag_trial(top::TransientTSWOperator)
-  println("diag trial ")
+  # println("diag trial ")
   diagop = get_diagop(top.op)
   get_trial(diagop)
 end

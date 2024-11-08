@@ -27,7 +27,7 @@ function Gridap.ODEs.allocate_odecache(
 
   odeopcache = Gridap.ODEs.allocate_odeopcache(odeop, t0, us0N, y,b,w,z)
 
-  J_prog = allocate_prognostic_jacobian(odeop,ts,u0,odeopcache, u0, b, y, w, z)
+  J_prog = allocate_prognostic_jacobian(odeop,ts,u0,odeopcache, u0, b, y, w, z, b)
 
   const_jac = is_const_jac(odeop)
 
@@ -68,7 +68,7 @@ function Gridap.ODEs.ode_start(
   odeslvrcache, odeopcache = odecache
   sysslvrcache, const_jac, J_prog = odeslvrcache
   ts = (t0,odeslvr.dt)
-  prognostic_jacobian!(J_prog, odeop, ts, u0, odeopcache, u0, b0, y0, w0, z0)
+  prognostic_jacobian!(J_prog, odeop, ts, u0, odeopcache, u0, b0, y0, w0, z0, b0)
 
   # Pack outputs
   odeslvrcache = (sysslvrcache, const_jac, J_prog)
@@ -101,7 +101,9 @@ function Gridap.ODEs.ode_march!(
 
   # Unpack solver
   sysslvr = odeslvr.sysslvr
-  diagslvr = odeslvr.diagslvr
+  diagslvrs = odeslvr.diagslvr
+  diagslvr1,diagslvr2 = diagslvrs
+
   dt = odeslvr.dt
 
   # Define scheme
@@ -119,11 +121,11 @@ function Gridap.ODEs.ode_march!(
 
 
   ############################################################################
-  prognostic_jacobian!(J_prog, odeop, ts, u0, odeopcache, u0, b0, y0, w0, z0)
+  prognostic_jacobian!(J_prog, odeop, ts, u0, odeopcache, u0, b0, y0, w0, z0, b0)
 
 
   # # Create and solve stage operator
-  stageop = TSWProgNonlinearOperator(odeop, odeopcache, ts, u0, diagslvr, J_prog, const_jac,
+  stageop = TSWProgNonlinearOperator(odeop, odeopcache, ts, u0, diagslvrs, J_prog, const_jac,
                 b0, y,w,z, b)
 
   sysslvrcache = Gridap.Algebra.solve!(x, sysslvr, stageop, sysslvrcache)
@@ -137,24 +139,24 @@ function Gridap.ODEs.ode_march!(
   diagslvrcacheb = odeopcache.diagslvrcacheb
 
 
-  diagbop = TSWDiagNonlinearOperatorb(odeop, odeopcache, ts, u0, x)
-  diagslvrcacheb = Gridap.Algebra.solve!(b, diagslvr, diagbop, diagslvrcacheb)
+  diagbop = TSWDiagNonlinearOperatorb(odeop, odeopcache, ts, u0, x, b0)
+  diagslvrcacheb = Gridap.Algebra.solve!(b, diagslvr2, diagbop, diagslvrcacheb)
   update_diagnosticsb!(odeopcache, b, diagslvrcacheb)
 
 
   diagop = TSWDiagNonlinearOperator(odeop, odeopcache, ts, u0, x)
-  diagslvrcache = Gridap.Algebra.solve!(y, diagslvr, diagop, diagslvrcache)
+  diagslvrcache = Gridap.Algebra.solve!(y, diagslvr1, diagop, diagslvrcache)
   update_diagnostics!(odeopcache, y, diagslvrcache)
 
 
-  # # solve for bhat
-  diagopw = TSWDiagNonlinearOperatorw(odeop, odeopcache, ts, b0, b, u0, x)
-  diagslvrcachew = Gridap.Algebra.solve!(w, diagslvr, diagopw, diagslvrcachew)
-  update_diagnosticsw!(odeopcache, w, diagslvrcachew)
+  # # # solve for bhat
+  # diagopw = TSWDiagNonlinearOperatorw(odeop, odeopcache, ts, b0, b, u0, x)
+  # diagslvrcachew = Gridap.Algebra.solve!(w, diagslvr1, diagopw, diagslvrcachew)
+  # update_diagnosticsw!(odeopcache, w, diagslvrcachew)
 
   # # solve for btilde
   diagopz = TSWDiagNonlinearOperatorz(odeop, odeopcache, ts, w, b0, b, y)
-  diagslvrcachez = Gridap.Algebra.solve!(z, diagslvr, diagopz, diagslvrcachez)
+  diagslvrcachez = Gridap.Algebra.solve!(z, diagslvr1, diagopz, diagslvrcachez)
   update_diagnosticsz!(odeopcache, z, diagslvrcachez)
 
   copy_to_cache!(odeopcache, b,y,w,z)

@@ -107,7 +107,7 @@ function Gridap.ODEs.allocate_odeopcache(
   t::Real, us::Tuple{Vararg{AbstractVector}},
   ys,b,w,z
 )
-  println("allocating TSW ode op cache")
+  # println("allocating TSW ode op cache")
 
   progop = get_progop(odeop) # u, h, B
   diagop = get_diagop(odeop) # F, Φ, q
@@ -184,7 +184,7 @@ function Gridap.ODEs.allocate_odeopcache(
   diagnostics = Gridap.Algebra.allocate_in_domain(J_diag)
   fill!(diagnostics,0.0)
 
-  println("made TSW cache")
+  # println("made TSW cache")
 
 
 
@@ -197,7 +197,7 @@ function Gridap.ODEs.allocate_odeopcache(
 
   jac_diagb = Gridap.ODEs.get_jacs(diagopb)
   dc = DomainContribution()
-  dc = dc + jac_diagb(ts, uh, uh, bh, db, v)
+  dc = dc + jac_diagb(ts, uh, uh, bh, db, v, bh)
   matdata = collect_cell_matrix(_Bt, V, dc)
   J_diagb = allocate_matrix(assembler, matdata)
   diagnosticsb = Gridap.Algebra.allocate_in_domain(J_diagb)
@@ -260,7 +260,7 @@ function Gridap.ODEs.allocate_odeopcache(
 
   jac_diagz = Gridap.ODEs.get_jacs(diagopz)
   dc = DomainContribution()
-  dc = dc + jac_diagz(ts, yh, bbarh,wh, zh, dz, v, bh)
+  dc = dc + jac_diagz(ts, yh, bbarh, zh, dz, v, bh)
   matdata = collect_cell_matrix(_Zt, V, dc)
   J_diagz = allocate_matrix(assembler, matdata)
   diagnosticsz = Gridap.Algebra.allocate_in_domain(J_diagz)
@@ -410,12 +410,11 @@ function update_diagnosticsz!(odeopcache, z, cache)
 
 end
 
-
 function allocate_prognostic_jacobian(
   odeop::TSWODEOpFromTFEOp,
   ts::Tuple, u,
   odeopcache, u0,
-  b, y, w, z
+  b, y, w, z, b0
 )
   progop = get_progop(odeop)
 
@@ -423,12 +422,16 @@ function allocate_prognostic_jacobian(
   Bs = odeopcache.Bs
   Ys = odeopcache.Ys
   Zs = odeopcache.Zs
+  Bbars = odeopcache.Bbars
 
   uh0 = EvaluationFunction(Us[1], u0)
   uh = EvaluationFunction(Us[1], u)
   bh = EvaluationFunction(Bs[1],b)
   yh =  EvaluationFunction(Ys[1],y)
   zh = EvaluationFunction(Zs[1],z)
+  bh0 = FEFunction(Bs[1], b0)
+  bbarfunc = get_bbarfunc(odeop)
+  bbarh = interpolate(bbarfunc(bh0,bh), Bbars[1])
 
   V = Gridap.ODEs.get_test(progop)
   v = get_fe_basis(V)
@@ -439,7 +442,7 @@ function allocate_prognostic_jacobian(
   #### Compute and store Prognostic jacobian
   jac_prog = Gridap.ODEs.get_jacs(progop)
   dc = DomainContribution()
-  dc = dc +  jac_prog(ts, uh0, uh, du, v,bh,yh, zh)
+  dc = dc +  jac_prog(ts, uh0, uh, du, v,bh,yh, zh, bbarh)
   matdata = collect_cell_matrix(Ut, V, dc)
   allocate_matrix(assembler, matdata)
 
@@ -447,7 +450,7 @@ end
 
 
 function prognostic_jacobian!(J, odeop::TSWODEOpFromTFEOp, ts::Tuple, u, odeopcache,
-        u0, b, y, w, z)
+        u0, b, y, w, z,b0)
   # println("updating prognostic jacobian")
 
   ## update prognostic jacobian
@@ -457,12 +460,16 @@ function prognostic_jacobian!(J, odeop::TSWODEOpFromTFEOp, ts::Tuple, u, odeopca
   Bs = odeopcache.Bs
   Ys = odeopcache.Ys
   Zs = odeopcache.Zs
+  Bbars = odeopcache.Bbars
 
   uh0 = EvaluationFunction(Us[1], u0)
   uh = EvaluationFunction(Us[1], u)
   bh = EvaluationFunction(Bs[1], b)
   yh = EvaluationFunction(Ys[1], y)
   zh = EvaluationFunction(Zs[1], z)
+  bh0 = FEFunction(Bs[1], b0)
+  bbarfunc = get_bbarfunc(odeop)
+  bbarh = interpolate(bbarfunc(bh0,bh), Bbars[1])
 
   Ut = evaluate(Gridap.FESpaces.get_trial(progop), nothing)
   du = get_trial_fe_basis(Ut)
@@ -472,7 +479,7 @@ function prognostic_jacobian!(J, odeop::TSWODEOpFromTFEOp, ts::Tuple, u, odeopca
 
   jac = Gridap.ODEs.get_jacs(progop)
   dc = DomainContribution()
-  dc = dc + jac(ts, uh0, uh, du, v, bh, yh, zh)
+  dc = dc + jac(ts, uh0, uh, du, v, bh, yh, zh, bbarh)
 
   matdata = collect_cell_matrix(Ut, V, dc)
   assemble_matrix!(J, assembler, matdata)

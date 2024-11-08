@@ -206,6 +206,7 @@ struct TSWDiagNonlinearOperatorb <: NonlinearOperator
   ts
   u0
   u
+  b0
 end
 
 # NonlinearOperator interface
@@ -225,6 +226,7 @@ function Gridap.Algebra.allocate_residual(
   u0 = EvaluationFunction(Us[1], nlop.u0)
   uh = EvaluationFunction(Us[1], nlop.u)
   bh = EvaluationFunction(Bs[1], x)
+  bh0 = EvaluationFunction(Bs[1], nlop.b0)
 
 
   V = Gridap.FESpaces.get_test(diagopb)
@@ -232,7 +234,7 @@ function Gridap.Algebra.allocate_residual(
   assembler = Gridap.ODEs.get_assembler(diagopb)
 
   res = Gridap.ODEs.get_res(diagopb)
-  vecdata = collect_cell_vector(V, res(ts, u0, uh, bh, v))
+  vecdata = collect_cell_vector(V, res(ts, u0, uh, bh, v, bh0))
   allocate_vector(assembler, vecdata)
 
 end
@@ -252,6 +254,7 @@ function Gridap.Algebra.allocate_jacobian(
   u0 = EvaluationFunction(Us[1], nlop.u0)
   uh = EvaluationFunction(Us[1], nlop.u)
   bh = EvaluationFunction(Bs[1], x)
+  bh0 = EvaluationFunction(Bs[1], nlop.b0)
 
   Yt0 = evaluate(Gridap.FESpaces.get_trial(diagopb), nothing)
   db = get_trial_fe_basis(Yt0)
@@ -261,7 +264,7 @@ function Gridap.Algebra.allocate_jacobian(
 
   jac = Gridap.ODEs.get_jacs(diagopb)
   dc = DomainContribution()
-  dc = dc + jac(ts, u0, uh, bh, db, v)
+  dc = dc + jac(ts, u0, uh, bh, db, v, bh0)
 
   matdata = collect_cell_matrix(Yt0, V, dc)
   allocate_matrix(assembler, matdata)
@@ -286,6 +289,7 @@ function Gridap.Algebra.residual!(
   u0 = EvaluationFunction(Us[1], nlop.u0)
   uh = EvaluationFunction(Us[1], nlop.u)
   bh = EvaluationFunction(Bs[1], x)
+  bh0 = EvaluationFunction(Bs[1], nlop.b0)
 
 
   V = Gridap.FESpaces.get_test(diagopb)
@@ -296,7 +300,7 @@ function Gridap.Algebra.residual!(
 
   res = Gridap.ODEs.get_res(diagopb)
   dc = DomainContribution()
-  dc = dc + res(ts, u0, uh, bh, v)
+  dc = dc + res(ts, u0, uh, bh, v, bh0)
   vecdata = collect_cell_vector(V, dc)
   assemble_vector!(r, assembler, vecdata)
 
@@ -324,6 +328,7 @@ function Gridap.Algebra.jacobian!(
   u0 = EvaluationFunction(Us[1], nlop.u0)
   uh = EvaluationFunction(Us[1], nlop.u)
   bh = EvaluationFunction(Bs[1], x)
+  bh0 = EvaluationFunction(Bs[1], nlop.b0)
 
 
   Yt0 = evaluate(Gridap.FESpaces.get_trial(diagopb), nothing)
@@ -334,7 +339,7 @@ function Gridap.Algebra.jacobian!(
 
   jac = Gridap.ODEs.get_jacs(diagopb)
   dc = DomainContribution()
-  dc = dc + jac(ts, u0, uh, bh, db, v)
+  dc = dc + jac(ts, u0, uh, bh, db, v, bh0)
 
   matdata = collect_cell_matrix(Yt0, V, dc)
   assemble_matrix!(J, assembler, matdata)
@@ -608,7 +613,7 @@ function Gridap.Algebra.allocate_residual(
   ts = nlop.ts
 
 
-  Ws = odeopcache.Ws
+  # Ws = odeopcache.Ws
   Zs = odeopcache.Zs
   Bs = odeopcache.Bs
   Bbars = odeopcache.Bbars
@@ -616,7 +621,7 @@ function Gridap.Algebra.allocate_residual(
 
   bh = EvaluationFunction(Bs[1], nlop.b)
   bh0 = EvaluationFunction(Bs[1], nlop.b0)
-  wh = EvaluationFunction(Ws[1], nlop.w)
+  # wh = EvaluationFunction(Ws[1], nlop.w)
   zh = EvaluationFunction(Zs[1], x)
   yh = EvaluationFunction(Ys[1], nlop.y)
 
@@ -629,7 +634,7 @@ function Gridap.Algebra.allocate_residual(
   assembler = Gridap.ODEs.get_assembler(diagopz)
 
   res = Gridap.ODEs.get_res(diagopz)
-  vecdata = collect_cell_vector(V, res(ts, yh, bbarh,wh, zh, v, bh))
+  vecdata = collect_cell_vector(V, res(ts, yh, bbarh, zh, v, bh, bh0))
   allocate_vector(assembler, vecdata)
 
 end
@@ -644,7 +649,7 @@ function Gridap.Algebra.allocate_jacobian(
   ts = nlop.ts
 
 
-  Ws = odeopcache.Ws
+  # Ws = odeopcache.Ws
   Zs = odeopcache.Zs
   Bs = odeopcache.Bs
   Bbars = odeopcache.Bbars
@@ -652,7 +657,7 @@ function Gridap.Algebra.allocate_jacobian(
 
   bh = EvaluationFunction(Bs[1], nlop.b)
   bh0 = EvaluationFunction(Bs[1], nlop.b0)
-  wh = EvaluationFunction(Ws[1], nlop.w)
+  # wh = EvaluationFunction(Ws[1], nlop.w)
   zh = EvaluationFunction(Zs[1], x)
   yh = EvaluationFunction(Ys[1], nlop.y)
 
@@ -668,7 +673,7 @@ function Gridap.Algebra.allocate_jacobian(
 
   jac = Gridap.ODEs.get_jacs(diagopz)
   dc = DomainContribution()
-  dc = dc + jac(ts, yh,bbarh,wh, zh, dz, v, bh)
+  dc = dc + jac(ts, yh,bbarh, zh, dz, v, bh)
 
   matdata = collect_cell_matrix(Zt, V, dc)
   allocate_matrix(assembler, matdata)
@@ -688,7 +693,7 @@ function Gridap.Algebra.residual!(
   ts = nlop.ts
 
 
-  Ws = odeopcache.Ws
+  # Ws = odeopcache.Ws
   Zs = odeopcache.Zs
   Bs = odeopcache.Bs
   Bbars = odeopcache.Bbars
@@ -696,7 +701,7 @@ function Gridap.Algebra.residual!(
 
   bh = EvaluationFunction(Bs[1], nlop.b)
   bh0 = EvaluationFunction(Bs[1], nlop.b0)
-  wh = EvaluationFunction(Ws[1], nlop.w)
+  # wh = EvaluationFunction(Ws[1], nlop.w)
   zh = EvaluationFunction(Zs[1], x)
   yh = EvaluationFunction(Ys[1], nlop.y)
 
@@ -713,7 +718,7 @@ function Gridap.Algebra.residual!(
 
   res = Gridap.ODEs.get_res(diagopz)
   dc = DomainContribution()
-  dc = dc + res(ts, yh, bbarh,wh, zh, v,bh)
+  dc = dc + res(ts, yh, bbarh, zh, v,bh, bh0)
   vecdata = collect_cell_vector(V, dc)
   assemble_vector!(r, assembler, vecdata)
 
@@ -736,7 +741,7 @@ function Gridap.Algebra.jacobian!(
   ts = nlop.ts
 
 
-  Ws = odeopcache.Ws
+  # Ws = odeopcache.Ws
   Zs = odeopcache.Zs
   Bs = odeopcache.Bs
   Bbars = odeopcache.Bbars
@@ -744,7 +749,7 @@ function Gridap.Algebra.jacobian!(
 
   bh = EvaluationFunction(Bs[1], nlop.b)
   bh0 = EvaluationFunction(Bs[1], nlop.b0)
-  wh = EvaluationFunction(Ws[1], nlop.w)
+  # wh = EvaluationFunction(Ws[1], nlop.w)
   zh = EvaluationFunction(Zs[1], x)
   yh = EvaluationFunction(Ys[1], nlop.y)
 
@@ -761,7 +766,7 @@ function Gridap.Algebra.jacobian!(
 
   jac = Gridap.ODEs.get_jacs(diagopz)
   dc = DomainContribution()
-  dc = dc + jac(ts, yh, bbarh,wh, zh, dz, v,bh)
+  dc = dc + jac(ts, yh, bbarh, zh, dz, v,bh)
 
   matdata = collect_cell_matrix(Zt, V, dc)
   assemble_matrix!(J, assembler, matdata)

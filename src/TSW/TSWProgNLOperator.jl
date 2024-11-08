@@ -29,7 +29,9 @@ function Gridap.Algebra.allocate_residual(
 
   ts = nlop.ts
 
-  diagslvr = nlop.diagslvr
+  diagslvrs = nlop.diagslvr
+  diagslvr1,diagslvr2 = diagslvrs
+
 
   b0 = nlop.b0
   y = nlop.y
@@ -38,27 +40,27 @@ function Gridap.Algebra.allocate_residual(
   b = nlop.b
 
   diagslvrcache = odeopcache.diagslvrcache
-  diagslvrcachew = odeopcache.diagslvrcachew
+  # diagslvrcachew = odeopcache.diagslvrcachew
   diagslvrcachez = odeopcache.diagslvrcachez
   diagslvrcacheb = odeopcache.diagslvrcacheb
 
   Us = odeopcache.Us
   Ys = odeopcache.Ys
-  Ws = odeopcache.Ws
+  # Ws = odeopcache.Ws
   Zs = odeopcache.Zs
   Ts = odeopcache.Ts
   Bs = odeopcache.Bs
   Bbars = odeopcache.Bbars
 
   # solve for b
-  diagbop = TSWDiagNonlinearOperatorb(odeop, odeopcache, ts, nlop.u0, x)
-  diagslvrcacheb = Gridap.Algebra.solve!(b, diagslvr, diagbop, diagslvrcacheb)
+  diagbop = TSWDiagNonlinearOperatorb(odeop, odeopcache, ts, nlop.u0, x, b0)
+  diagslvrcacheb = Gridap.Algebra.solve!(b, diagslvr2, diagbop, diagslvrcacheb)
   update_diagnosticsb!(odeopcache, b, diagslvrcacheb)
 
 
   # # Create and solve diagnostics
   diagop = TSWDiagNonlinearOperator(odeop, odeopcache, ts, nlop.u0, x)
-  diagslvrcache = Gridap.Algebra.solve!(y, diagslvr, diagop, diagslvrcache)
+  diagslvrcache = Gridap.Algebra.solve!(y, diagslvr1, diagop, diagslvrcache)
   update_diagnostics!(odeopcache, y, diagslvrcache)
 
   u0 = FEFunction(Us[1], nlop.u0)
@@ -76,15 +78,15 @@ function Gridap.Algebra.allocate_residual(
   bbarh = interpolate(bbarfunc(bh0,bh), Bbars[1])
 
   # # solve for bhat
-  diagopw = TSWDiagNonlinearOperatorw(odeop, odeopcache, ts, b0, b, nlop.u0, x)
-  diagslvrcachew = Gridap.Algebra.solve!(w, diagslvr, diagopw, diagslvrcachew)
-  update_diagnosticsw!(odeopcache, w, diagslvrcachew)
-  wh = FEFunction(Ws[1],w)
+  # diagopw = TSWDiagNonlinearOperatorw(odeop, odeopcache, ts, b0, b, nlop.u0, x)
+  # diagslvrcachew = Gridap.Algebra.solve!(w, diagslvr, diagopw, diagslvrcachew)
+  # update_diagnosticsw!(odeopcache, w, diagslvrcachew)
+  # wh = FEFunction(Ws[1],w)
 
 
   # # solve for btilde
   diagopz = TSWDiagNonlinearOperatorz(odeop, odeopcache, ts, w, b0, b,y)
-  diagslvrcachez = Gridap.Algebra.solve!(z, diagslvr, diagopz, diagslvrcachez)
+  diagslvrcachez = Gridap.Algebra.solve!(z, diagslvr1, diagopz, diagslvrcachez)
   update_diagnosticsz!(odeopcache, z, diagslvrcachez)
   zh = FEFunction(Zs[1],z)
 
@@ -95,7 +97,7 @@ function Gridap.Algebra.allocate_residual(
   assembler = Gridap.ODEs.get_assembler(progop)
 
   res = Gridap.ODEs.get_res(progop)
-  vecdata = collect_cell_vector(V, res(ts, u0, uh, Th, bbarh, wh, zh, yh, v, bh))
+  vecdata = collect_cell_vector(V, res(ts, u0, uh, Th, bbarh, zh, yh, v, bh, bh0))
   allocate_vector(assembler, vecdata)
 
 
@@ -104,7 +106,7 @@ end
 function Gridap.Algebra.allocate_jacobian(
   nlop::TSWProgNonlinearOperator, x::AbstractVector
   )
-  println("allocate jacobian")
+  # println("allocate jacobian")
   # odeop, odeopcache = nlop.odeop, nlop.odeopcache
   # ts = nlop.ts
 
@@ -130,7 +132,9 @@ function Gridap.Algebra.residual!(
 
   ts = nlop.ts
 
-  diagslvr = nlop.diagslvr
+  diagslvrs = nlop.diagslvr
+  diagslvr1,diagslvr2 = diagslvrs
+
 
   b0 = nlop.b0 # odeopcache.diagnostics0 # these have been previously updated
   y = nlop.y # to be solved for
@@ -139,13 +143,13 @@ function Gridap.Algebra.residual!(
   b = nlop.b
 
   diagslvrcache = odeopcache.diagslvrcache
-  diagslvrcachew = odeopcache.diagslvrcachew
+  # diagslvrcachew = odeopcache.diagslvrcachew
   diagslvrcachez = odeopcache.diagslvrcachez
   diagslvrcacheb = odeopcache.diagslvrcacheb
 
   Us = odeopcache.Us
   Ys = odeopcache.Ys
-  Ws = odeopcache.Ws
+  # Ws = odeopcache.Ws
   Zs = odeopcache.Zs
   Ts = odeopcache.Ts
   Bs = odeopcache.Bs
@@ -153,14 +157,14 @@ function Gridap.Algebra.residual!(
 
 
   # solve for b
-  diagbop = TSWDiagNonlinearOperatorb(odeop, odeopcache, ts, nlop.u0, x)
-  diagslvrcacheb = Gridap.Algebra.solve!(b, diagslvr, diagbop, diagslvrcacheb)
+  diagbop = TSWDiagNonlinearOperatorb(odeop, odeopcache, ts, nlop.u0, x, b0)
+  diagslvrcacheb = Gridap.Algebra.solve!(b, diagslvr2, diagbop, diagslvrcacheb)
   update_diagnosticsb!(odeopcache, b, diagslvrcacheb)
 
 
   # Create and solve diagnostics
   diagop = TSWDiagNonlinearOperator(odeop, odeopcache, ts, nlop.u0, x)
-  diagslvrcache = Gridap.Algebra.solve!(y, diagslvr, diagop, diagslvrcache)
+  diagslvrcache = Gridap.Algebra.solve!(y, diagslvr1, diagop, diagslvrcache)
   update_diagnostics!(odeopcache, y, diagslvrcache)
 
   u0 = FEFunction(Us[1], nlop.u0)
@@ -178,14 +182,14 @@ function Gridap.Algebra.residual!(
   bbarh = interpolate(bbarfunc(bh0,bh), Bbars[1])
 
   # solve for bhat
-  diagopw = TSWDiagNonlinearOperatorw(odeop, odeopcache, ts, b0, b, nlop.u0, x)
-  diagslvrcachew = Gridap.Algebra.solve!(w, diagslvr, diagopw, diagslvrcachew)
-  update_diagnosticsw!(odeopcache, w, diagslvrcachew)
-  wh = FEFunction(Ws[1],w)
+  # diagopw = TSWDiagNonlinearOperatorw(odeop, odeopcache, ts, b0, b, nlop.u0, x)
+  # diagslvrcachew = Gridap.Algebra.solve!(w, diagslvr, diagopw, diagslvrcachew)
+  # update_diagnosticsw!(odeopcache, w, diagslvrcachew)
+  # wh = FEFunction(Ws[1],w)
 
   # solve for btilde
   diagopz = TSWDiagNonlinearOperatorz(odeop, odeopcache, ts, w, b0, b, y)
-  diagslvrcachez = Gridap.Algebra.solve!(z, diagslvr, diagopz, diagslvrcachez)
+  diagslvrcachez = Gridap.Algebra.solve!(z, diagslvr1, diagopz, diagslvrcachez)
   update_diagnosticsz!(odeopcache, z, diagslvrcachez)
   zh = FEFunction(Zs[1],z)
 
@@ -199,7 +203,7 @@ function Gridap.Algebra.residual!(
 
   res = Gridap.ODEs.get_res(progop)
   dc = DomainContribution()
-  dc = dc + res(ts, u0, uh, Th, bbarh, wh, zh, yh, v, bh)
+  dc = dc + res(ts, u0, uh, Th, bbarh, zh, yh, v, bh, bh0)
   vecdata = collect_cell_vector(V, dc)
   assemble_vector!(r, assembler, vecdata)
 
@@ -218,6 +222,7 @@ function Gridap.Algebra.jacobian!(
   odeop, odeopcache = nlop.odeop, nlop.odeopcache
   ts = nlop.ts
 
+  b0 = nlop.b0
   b = odeopcache.diagnosticsb
   y = odeopcache.diagnostics
   w = odeopcache.diagnosticsw
@@ -226,7 +231,7 @@ function Gridap.Algebra.jacobian!(
   Gridap.Algebra.copy_entries!(J, nlop.J_prog)
 
   if !nlop.const_jac
-    prognostic_jacobian!(J, odeop, ts, x, odeopcache, nlop.u0, b, y, w, z)
+    prognostic_jacobian!(J, odeop, ts, x, odeopcache, nlop.u0, b, y, w, z, b0)
   end
 
 
